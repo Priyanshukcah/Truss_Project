@@ -1,1 +1,1 @@
-Solves 2D ideal truss problem by computaion
+Solves 2D ideal truss problem by computation
