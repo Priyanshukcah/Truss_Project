@@ -1,0 +1,52 @@
+vector<vector<vector<float>>>LU_decomp(vector<vector<float>>mat)
+{
+    int n = mat.size();
+    vector<vector<float>>UT(n,vector<float>(n,0.0));
+    vector<vector<float>>LT(n,vector<float>(n,0.0));
+    UT=mat;
+
+    for(int i=0;i<n;i++)
+    {
+        if(UT[i][i]==0)
+        {
+            int k=i+1;
+            while(k<n)
+            {
+                if(UT[k][i]!=0)break;   
+                k++;
+            }
+            // one k has to exist otherwise infinte or no solution
+            if(k<n)
+            for(int j=0;j<n;j++)
+            {
+                swap(UT[i][j],UT[k][j]);
+                swap(mat[i][j],mat[k][j]);
+            }
+        }
+        for(int j=i+1;j<n;j++)
+        {
+            float neg_factor=UT[j][i]/UT[i][i];
+            for(int k=i;k<n;k++)UT[j][k]-=neg_factor*UT[i][k];
+        }
+    }
+    // Upper triangular matrix is thus formed
+    // the method which gives the values of lower triangular sequentially
+    for(int i=0;i<n;i++)LT[i][i]=1;  
+    //we find answer row by row -j stands for which column to process      
+    for(int j=0;j<n;j++)
+    {
+        for(int i=j+1;i<n;i++)
+        {
+            float lane_sum=0;
+            for(int k=0;k<=i;k++)
+            {
+                if(k!=j)
+                lane_sum+=LT[i][k]*UT[k][j];
+            }
+            LT[i][j]=(mat[i][j]-lane_sum)/UT[j][j];
+        }
+    }
+    // this particular sequence of comparision ensures that we get variables with one equation
+    // something like forward substitution
+    return {UT,LT};
+}
