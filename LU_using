@@ -1,0 +1,69 @@
+#include<bits/stdc++.h>
+using namespace std;
+//you are given upper and lower triangular matrix 
+// 1 2 3
+// 0 4 5
+// 0 0 6  -UT
+
+// 1 0 0  -LT
+// 2 1 0
+// 3 4 1
+// ensure computational benefit
+vector<double>LT_const(vector<vector<double>>mat,vector<double>const_vect)
+{
+    // forward substitution
+    int size=mat.size();
+    vector<double>ans(size);
+    // for each unknown
+    for(int i=0;i<size;i++)
+    {
+      double lane_sum=0;
+      for(int j=0;j<size;j++)
+      if(j!=i)
+      {
+        lane_sum+=mat[i][j]*ans[j];
+      }
+      ans[i]=(const_vect[i]-lane_sum)/mat[i][i];
+    }
+    return ans;
+}
+
+vector<double>UT_const(vector<vector<double>>mat,vector<double>const_vect)
+{
+    // backward substitution
+    int size=mat.size();
+    vector<double>ans(size);
+    // for each unknown
+    for(int i=size-1;i>=0;i--)
+    {
+      double lane_sum=0;
+      for(int j=0;j<size;j++)
+      if(j!=i)
+      {
+        lane_sum+=mat[i][j]*ans[j];
+      }
+      ans[i]=(const_vect[i]-lane_sum)/mat[i][i];
+    }
+    return ans;
+}
+int main()
+{
+  int size;
+  cin>>size;
+  vector<vector<double>>mat(size,vector<double>(size)),mat1(size,vector<double>(size));
+  vector<double>const_vect(size),ans(size);
+  for(int i=0;i<size;i++)
+  for(int j=0;j<size;j++)
+  cin>>mat[i][j];
+
+  for(int i=0;i<size;i++)
+  for(int j=0;j<size;j++)
+  cin>>mat1[i][j];
+
+  for(int i=0;i<size;i++)cin>>const_vect[i];
+
+  ans=LT_const(mat,const_vect);
+  ans=UT_const(mat1,ans);
+  for(int i=0;i<size;i++)cout<<ans[i]<<"\n";
+  return 0;
+}
