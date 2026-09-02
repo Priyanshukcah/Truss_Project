@@ -1,0 +1,205 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+vector<double>eqn_solver(int no_of_var,int no_of_equat, vector<vector<double>>mat)
+{
+ // (but assume well defined solution)
+  //the downfall
+  for(int i=0;i<no_of_equat-1;i++)//selecting the main row
+  {
+    //always the largest should be taken
+      double maxi=abs(mat[i][i]);
+      int ind =i;
+      for(int l=i+1;l<no_of_equat;l++)
+      {
+        if(maxi<abs(mat[l][i]))
+        {
+            maxi=abs(mat[l][i]);
+            ind=l;
+        }
+      }
+      // swapping to ensure blow up does not happen  
+      for(int z=0;z<no_of_var+1;z++)
+        {
+          swap(mat[i][z],mat[ind][z]);
+        }
+      
+  for(int j=i+1;j<no_of_equat;j++)// selecting its lower rows
+  {
+    double factor = mat[j][i]/mat[i][i];
+    for(int z=0;z<no_of_var+1;z++)
+    {
+      mat[j][z]=mat[j][z]-factor*mat[i][z];
+    }
+  }
+  }
+  //the uprise
+  for(int i=no_of_equat-1;i>=0;i--)
+  {
+    for(int j=i-1;j>=0;j--)
+    {
+      double factor=mat[j][i]/mat[i][i];
+      mat[j][i]=0;
+      mat[j][no_of_var]-=factor*mat[i][no_of_var]; 
+    }
+  }
+  vector<double>ans(no_of_var);
+  //final answer
+  for(int i=0;i<no_of_var;i++)ans[i]=mat[i][no_of_var]/mat[i][i];;
+  return ans;
+}
+
+// if we have error in A and B (A+l)(X+n)=B+m
+// l = error in A, n = error in X , m= eroor in B
+// after solving above we get AX + An + lX + ln = B + m
+// Now we ignoring higher order term (ln) 
+// we have An + lX =  m (Given:AX = B)
+// In above equation we don't know n but l and m we know
+// above equation can we write as An = m - lX.
+
+
+int main()
+{
+    int N;
+    cout << "Enter number of variables:";
+    cin >> N;
+    
+    // Step 1: Input A and B
+    vector<vector<double>> A(N, vector<double>(N));
+    vector<double> B(N);
+
+    cout <<"\nEnter matrix A:\n";
+
+    for(int i = 0; i < N; i++)
+    {
+        for(int j = 0; j < N; j++)
+        {
+            cin >> A[i][j];
+        }
+    }
+
+    cout << "\nEnter vector B:\n";
+    for(int i = 0; i < N; i++)
+    {
+        cin >> B[i];
+    }
+
+    // Step 2: Solve AX = B
+    // Construct augmented matrix [A | B]
+    
+    vector<vector<double>> originalMat(N,vector<double>(N + 1));
+
+    for(int i = 0; i < N; i++)
+    {
+        for(int j = 0; j < N; j++)
+        {
+            originalMat[i][j] = A[i][j];
+        }
+        originalMat[i][N] = B[i];
+    }
+
+    // X = solution of AX = B
+    vector<double> X = eqn_solver(N, N, originalMat);
+
+    cout << "\nOriginal solution X:\n";
+
+    for(int i = 0; i < N; i++)
+    {
+        cout << "X[" << i << "] = " << X[i] << endl;
+    }
+
+    // Step 3: Input l = error in A
+    vector<vector<double>> l(N,vector<double>(N));
+
+    cout << "\nEnter l (error in A):\n";
+    for(int i = 0; i < N; i++)
+    {
+        for(int j = 0; j < N; j++)
+        {
+            cin >> l[i][j];
+        }
+    }
+
+    // Step 4: Input m = error in B
+    vector<double> m(N);
+
+    cout << "\nEnter m (error in B):\n";
+    for(int i = 0; i < N; i++)
+    {
+        cin >> m[i];
+    }
+
+    // Step 5: Calculate lX
+    vector<double> lX(N, 0);
+
+    for(int i = 0; i < N; i++)
+    {
+        for(int j = 0; j < N; j++)
+        {
+            lX[i] += l[i][j] * X[j];
+        }
+    }
+
+    cout << "\nlX = l * X:\n";
+
+    for(int i = 0; i < N; i++)
+    {
+        cout << "lX[" << i << "] = " << lX[i] << endl;
+    }
+
+    // Step 6: Calculate m - lX
+    // Error equation:  An = m - lX
+    vector<double> RHS(N);
+
+    for(int i = 0; i < N; i++)
+    {
+        RHS[i] = m[i] - lX[i];
+    }
+    cout << "\nm - lX:\n";
+
+    for(int i = 0; i < N; i++)
+    {
+        cout << "RHS[" << i << "] = " << RHS[i] << endl;
+    }
+
+    // Step 7: Construct [A | m-lX]
+    vector<vector<double>> errorMat(N,vector<double>(N + 1));
+    for(int i = 0; i < N; i++)
+    {
+        // Copy A
+        for(int j = 0; j < N; j++)
+        {
+            errorMat[i][j] = A[i][j];
+        }
+        // Last column = m - lX
+        errorMat[i][N] = RHS[i];
+    }
+
+    //Step 8: Solve An = m-lX
+    vector<double> n = eqn_solver(N, N, errorMat);
+    
+    // Step 9: Error in  X = n
+    cout << "\nError in solution n (error in X):\n";
+
+    for(int i = 0; i < N; i++)
+    {
+        cout << "n[" << i << "] = " << n[i] << endl;
+    }
+
+    // STEP 10: Calculate new solution X + (error in x)
+    vector<double> newX(N);
+
+    for(int i = 0; i < N; i++)
+    {
+        newX[i] = X[i] + n[i];
+    }
+
+    cout << "\nNew estimated solution X + (error in X):\n";
+    for(int i = 0; i < N; i++)
+    {
+        cout << "X_new[" << i << "] = "
+             << newX[i] << endl;
+    }
+
+    return 0;
+}
